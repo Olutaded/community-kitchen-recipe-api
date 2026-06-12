@@ -1,0 +1,1147 @@
+openapi: 3.0.3
+
+info:
+  title: Community Kitchen Recipe and Meal Planning API
+  version: 1.0.0
+  description: |
+    A secure RESTful API built with Koa Node.js and MySQL for a community kitchen recipe and meal planning system.
+    The API supports JWT authentication, role-based authorisation, recipes, categories, ingredients, meal plans, reviews and favourites.
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local development server
+
+tags:
+  - name: System
+    description: API health and database checks.
+  - name: Authentication
+    description: Login, profile and admin access checks.
+  - name: Recipes
+    description: Recipe browsing and admin recipe management.
+  - name: Categories
+    description: Recipe category browsing.
+  - name: Ingredients
+    description: Ingredient browsing.
+  - name: Meal Plans
+    description: Authenticated user meal planning.
+  - name: Reviews
+    description: Recipe review management.
+  - name: Favourites
+    description: Authenticated user favourite recipes.
+
+paths:
+  /health:
+    get:
+      tags: [System]
+      summary: Check whether the API is running
+      responses:
+        '200':
+          description: API running successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+
+  /db-test:
+    get:
+      tags: [System]
+      summary: Check whether the API can connect to MySQL
+      responses:
+        '200':
+          description: Database connection working
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Login and receive a JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              adminLogin:
+                value:
+                  email: admin@communitykitchen.test
+                  password: Admin@12345
+              userLogin:
+                value:
+                  email: grace@communitykitchen.test
+                  password: User@12345
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Missing email or password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid email or password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/profile:
+    get:
+      tags: [Authentication]
+      summary: Get authenticated user profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Profile returned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+        '401':
+          description: Missing, invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/admin-check:
+    get:
+      tags: [Authentication]
+      summary: Check whether authenticated user has admin access
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Admin authorisation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminCheckResponse'
+        '401':
+          description: Missing, invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: User does not have admin permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /recipes:
+    get:
+      tags: [Recipes]
+      summary: Get all public recipes
+      responses:
+        '200':
+          description: Public recipes returned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeListResponse'
+
+    post:
+      tags: [Recipes]
+      summary: Create a new recipe
+      description: Admin-only endpoint. Requires a valid JWT token and recipes:write scope.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipeRequest'
+            example:
+              categoryId: 1
+              title: Community Vegetable Soup
+              description: A healthy soup prepared with vegetables for community meal support.
+              instructions: Wash and chop vegetables. Fry onions and tomatoes. Add vegetables, water and salt. Simmer until cooked.
+              preparationTimeMinutes: 15
+              cookingTimeMinutes: 30
+              servings: 6
+              difficulty: Easy
+              isPublic: true
+      responses:
+        '201':
+          description: Recipe created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeSingleResponse'
+        '400':
+          description: Invalid recipe data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Missing, invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: User does not have permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /recipes/{id}:
+    get:
+      tags: [Recipes]
+      summary: Get one public recipe by ID
+      parameters:
+        - $ref: '#/components/parameters/RecipeId'
+      responses:
+        '200':
+          description: Recipe returned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeSingleResponse'
+        '400':
+          description: Invalid recipe ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Recipe not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags: [Recipes]
+      summary: Update a recipe
+      description: Admin-only endpoint. Requires a valid JWT token and recipes:write scope.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RecipeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipeRequest'
+      responses:
+        '200':
+          description: Recipe updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeSingleResponse'
+        '400':
+          description: Invalid recipe ID or recipe data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Missing, invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: User does not have permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Recipe not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [Recipes]
+      summary: Delete a recipe
+      description: Admin-only endpoint. Requires a valid JWT token and recipes:write scope.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RecipeId'
+      responses:
+        '200':
+          description: Recipe deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        '400':
+          description: Invalid recipe ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing, invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: User does not have permission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Recipe not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /categories:
+    get:
+      tags: [Categories]
+      summary: Get all recipe categories
+      responses:
+        '200':
+          description: Categories returned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryListResponse'
+
+  /ingredients:
+    get:
+      tags: [Ingredients]
+      summary: Get all ingredients
+      responses:
+        '200':
+          description: Ingredients returned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngredientListResponse'
+
+  /meal-plans:
+    get:
+      tags: [Meal Plans]
+      summary: Get meal plans for authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Meal plans returned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MealPlanListResponse'
+        '401':
+          description: Missing, invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags: [Meal Plans]
+      summary: Create a meal plan for authenticated user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MealPlanRequest'
+            example:
+              recipeId: 2
+              mealDate: '2026-06-20'
+              mealType: Dinner
+              notes: Add this to the weekly dinner plan.
+      responses:
+        '201':
+          description: Meal plan created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MealPlanSingleResponse'
+        '400':
+          description: Invalid meal plan data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Missing, invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Missing mealplans:write scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /recipes/{id}/reviews:
+    get:
+      tags: [Reviews]
+      summary: Get reviews for a recipe
+      parameters:
+        - $ref: '#/components/parameters/RecipeId'
+      responses:
+        '200':
+          description: Reviews returned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewListResponse'
+        '400':
+          description: Invalid recipe ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Recipe not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags: [Reviews]
+      summary: Create a review for a recipe
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/RecipeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewRequest'
+            example:
+              rating: 5
+              comment: This is a simple and useful vegetarian recipe.
+      responses:
+        '201':
+          description: Review created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewSingleResponse'
+        '400':
+          description: Invalid recipe ID or review data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Missing, invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Missing reviews:write scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Recipe not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: User has already reviewed this recipe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /favourites:
+    get:
+      tags: [Favourites]
+      summary: Get favourites for authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Favourites returned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FavouriteListResponse'
+        '401':
+          description: Missing, invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags: [Favourites]
+      summary: Add a recipe to authenticated user's favourites
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FavouriteRequest'
+            example:
+              recipeId: 2
+      responses:
+        '201':
+          description: Favourite added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FavouriteSingleResponse'
+        '400':
+          description: Invalid favourite data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Missing, invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Missing favourites:write scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Recipe not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Recipe already in favourites
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /favourites/{recipeId}:
+    delete:
+      tags: [Favourites]
+      summary: Remove a recipe from authenticated user's favourites
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: recipeId
+          in: path
+          required: true
+          description: ID of the recipe to remove from favourites
+          schema:
+            type: integer
+            example: 2
+      responses:
+        '200':
+          description: Favourite removed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        '400':
+          description: Invalid recipe ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Missing, invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Missing favourites:write scope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Favourite not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    RecipeId:
+      name: id
+      in: path
+      required: true
+      description: Numeric recipe ID
+      schema:
+        type: integer
+        example: 1
+
+  schemas:
+    SuccessMessage:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Community Kitchen Recipe API is running
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: error
+        message:
+          type: string
+          example: Route not found
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: error
+        message:
+          type: string
+          example: Invalid recipe data
+        details:
+          type: array
+          items:
+            type: string
+          example:
+            - '"title" is required'
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: admin@communitykitchen.test
+        password:
+          type: string
+          example: Admin@12345
+
+    LoginResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Login successful
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        fullName:
+          type: string
+          example: System Administrator
+        email:
+          type: string
+          example: admin@communitykitchen.test
+        role:
+          type: string
+          enum: [admin, user]
+          example: admin
+        scopes:
+          type: array
+          items:
+            type: string
+          example: [recipes:read, recipes:write, admin:manage]
+
+    ProfileResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        data:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            email:
+              type: string
+              example: admin@communitykitchen.test
+            role:
+              type: string
+              example: admin
+            scopes:
+              type: array
+              items:
+                type: string
+
+    AdminCheckResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Admin authorisation successful
+        data:
+          type: object
+          properties:
+            user:
+              type: string
+              example: admin@communitykitchen.test
+            role:
+              type: string
+              example: admin
+
+    RecipeRequest:
+      type: object
+      required:
+        - categoryId
+        - title
+        - description
+        - instructions
+        - preparationTimeMinutes
+        - cookingTimeMinutes
+        - servings
+        - difficulty
+      properties:
+        categoryId:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: Community Vegetable Soup
+        description:
+          type: string
+          example: A healthy soup prepared with vegetables for community meal support.
+        instructions:
+          type: string
+          example: Wash and chop vegetables. Fry onions and tomatoes. Add vegetables, water and salt. Simmer until cooked.
+        preparationTimeMinutes:
+          type: integer
+          example: 15
+        cookingTimeMinutes:
+          type: integer
+          example: 30
+        servings:
+          type: integer
+          example: 6
+        difficulty:
+          type: string
+          enum: [Easy, Medium, Hard]
+          example: Easy
+        isPublic:
+          type: boolean
+          example: true
+
+    Recipe:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: Vegetable Lentil Stew
+        description:
+          type: string
+          example: A nutritious lentil stew prepared with carrots, tomatoes and spinach.
+        instructions:
+          type: string
+          example: Wash the lentils. Fry onions and tomatoes. Add carrots, lentils and water. Simmer until soft.
+        preparationTimeMinutes:
+          type: integer
+          example: 15
+        cookingTimeMinutes:
+          type: integer
+          example: 35
+        servings:
+          type: integer
+          example: 4
+        difficulty:
+          type: string
+          example: Easy
+        isPublic:
+          type: boolean
+          example: true
+        category:
+          type: string
+          example: Healthy Meals
+        createdBy:
+          type: string
+          example: System Administrator
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        links:
+          $ref: '#/components/schemas/Links'
+
+    RecipeListResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        count:
+          type: integer
+          example: 4
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Recipe'
+
+    RecipeSingleResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Recipe created successfully
+        data:
+          $ref: '#/components/schemas/Recipe'
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Healthy Meals
+        description:
+          type: string
+          example: Balanced meals suitable for community kitchen nutrition programmes.
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        links:
+          $ref: '#/components/schemas/Links'
+
+    CategoryListResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        count:
+          type: integer
+          example: 4
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+
+    Ingredient:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Rice
+        unit:
+          type: string
+          example: grams
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        links:
+          $ref: '#/components/schemas/Links'
+
+    IngredientListResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        count:
+          type: integer
+          example: 10
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ingredient'
+
+    MealPlanRequest:
+      type: object
+      required: [recipeId, mealDate, mealType]
+      properties:
+        recipeId:
+          type: integer
+          example: 2
+        mealDate:
+          type: string
+          format: date
+          example: '2026-06-20'
+        mealType:
+          type: string
+          enum: [Breakfast, Lunch, Dinner, Snack]
+          example: Dinner
+        notes:
+          type: string
+          example: Add this to the weekly dinner plan.
+
+    MealPlan:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        userId:
+          type: integer
+          example: 2
+        recipeId:
+          type: integer
+          example: 1
+        recipeTitle:
+          type: string
+          example: Vegetable Lentil Stew
+        category:
+          type: string
+          example: Healthy Meals
+        mealDate:
+          type: string
+          format: date-time
+        mealType:
+          type: string
+          example: Lunch
+        notes:
+          type: string
+          example: Prepare for weekday lunch plan.
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        links:
+          $ref: '#/components/schemas/Links'
+
+    MealPlanListResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        count:
+          type: integer
+          example: 1
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/MealPlan'
+
+    MealPlanSingleResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Meal plan created successfully
+        data:
+          $ref: '#/components/schemas/MealPlan'
+
+    ReviewRequest:
+      type: object
+      required: [rating]
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+        comment:
+          type: string
+          example: This is a simple and useful vegetarian recipe.
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        userId:
+          type: integer
+          example: 2
+        recipeId:
+          type: integer
+          example: 1
+        rating:
+          type: integer
+          example: 5
+        comment:
+          type: string
+          example: Nutritious, simple and easy to prepare.
+        reviewerName:
+          type: string
+          example: Grace Wanjiku
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        links:
+          $ref: '#/components/schemas/Links'
+
+    ReviewListResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        count:
+          type: integer
+          example: 1
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Review'
+
+    ReviewSingleResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Review created successfully
+        data:
+          $ref: '#/components/schemas/Review'
+
+    FavouriteRequest:
+      type: object
+      required: [recipeId]
+      properties:
+        recipeId:
+          type: integer
+          example: 2
+
+    Favourite:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        userId:
+          type: integer
+          example: 2
+        recipeId:
+          type: integer
+          example: 1
+        recipeTitle:
+          type: string
+          example: Vegetable Lentil Stew
+        recipeDescription:
+          type: string
+          example: A nutritious lentil stew prepared with carrots, tomatoes and spinach.
+        category:
+          type: string
+          example: Healthy Meals
+        difficulty:
+          type: string
+          example: Easy
+        servings:
+          type: integer
+          example: 4
+        createdAt:
+          type: string
+          format: date-time
+        links:
+          $ref: '#/components/schemas/Links'
+
+    FavouriteListResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        count:
+          type: integer
+          example: 1
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Favourite'
+
+    FavouriteSingleResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Favourite added successfully
+        data:
+          $ref: '#/components/schemas/Favourite'
+
+    Links:
+      type: object
+      additionalProperties:
+        type: string
+      example:
+        self: /api/recipes/1
+        reviews: /api/recipes/1/reviews

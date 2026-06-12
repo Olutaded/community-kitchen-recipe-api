@@ -1,0 +1,311 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f4f6f8;
+  color: #1f2933;
+}
+
+button {
+  border: none;
+  background: #166534;
+  color: white;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+button:hover {
+  background: #14532d;
+}
+
+button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+input,
+select {
+  width: 100%;
+  padding: 0.7rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  margin-top: 0.35rem;
+  background: white;
+}
+
+label {
+  display: block;
+  font-weight: 700;
+}
+
+.app {
+  width: min(1180px, 94%);
+  margin: 0 auto;
+  padding: 2rem 0;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 1.7fr 1fr;
+  gap: 1.5rem;
+  align-items: stretch;
+  margin-bottom: 1.5rem;
+}
+
+.hero,
+.panel {
+  background: white;
+  border-radius: 18px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+}
+
+.eyebrow {
+  color: #166534;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+}
+
+h1 {
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  margin: 0.3rem 0;
+  line-height: 1.05;
+}
+
+h2,
+h3 {
+  margin-top: 0;
+}
+
+.hero-text {
+  max-width: 720px;
+  font-size: 1.05rem;
+  color: #52616b;
+  line-height: 1.6;
+}
+
+.status-card {
+  border: 1px solid #d9e2ec;
+  border-radius: 14px;
+  padding: 1rem;
+  background: #f8fafc;
+}
+
+.success {
+  color: #166534;
+  font-weight: 700;
+}
+
+.error {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
+.muted {
+  color: #52616b;
+  line-height: 1.5;
+}
+
+.hint {
+  color: #52616b;
+  font-size: 0.9rem;
+  margin-bottom: 0;
+}
+
+.auth-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.login-form,
+.stacked-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.danger-button,
+.small-danger {
+  background: #991b1b;
+}
+
+.danger-button:hover,
+.small-danger:hover {
+  background: #7f1d1d;
+}
+
+.small-danger {
+  margin-top: 0.7rem;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.85rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.large-panel {
+  grid-row: span 2;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.wide-panel {
+  grid-column: 1 / -1;
+}
+
+.admin-section {
+  margin-top: 1.5rem;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.recipe-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.recipe-card {
+  border: 1px solid #d9e2ec;
+  border-radius: 14px;
+  padding: 1rem;
+  background: #ffffff;
+}
+
+.recipe-image-wrap {
+  width: 100%;
+  height: 210px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  border: 1px solid #d9e2ec;
+  background: #f8fafc;
+}
+
+.recipe-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.recipe-card p {
+  color: #52616b;
+  line-height: 1.5;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.8rem 0;
+}
+
+.meta span {
+  background: #dcfce7;
+  color: #166534;
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.simple-list,
+.ingredient-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.simple-list li {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0.8rem 0;
+}
+
+.simple-list li:last-child,
+.ingredient-list li:last-child {
+  border-bottom: none;
+}
+
+.simple-list strong {
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+.simple-list span {
+  display: block;
+  color: #52616b;
+  line-height: 1.4;
+}
+
+.ingredient-list li {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0.7rem 0;
+  font-weight: 700;
+}
+
+.ingredient-list span {
+  color: #52616b;
+  font-weight: 400;
+}
+
+.review-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.review-comment {
+  grid-column: 1 / -1;
+}
+
+.review-form button {
+  width: fit-content;
+}
+
+@media (max-width: 860px) {
+  .hero,
+  .auth-panel,
+  .grid,
+  .feature-grid,
+  .review-form {
+    grid-template-columns: 1fr;
+  }
+
+  .large-panel,
+  .wide-panel,
+  .review-comment {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}

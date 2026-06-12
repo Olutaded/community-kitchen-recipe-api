@@ -1,0 +1,37 @@
+{
+  "name": "community-kitchen-recipe-api-server",
+  "version": "1.0.0",
+  "description": "Koa RESTful API for a Community Kitchen Recipe and Meal Planning system",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "jest --runInBand"
+  },
+  "keywords": [
+    "koa",
+    "rest-api",
+    "mysql",
+    "recipes",
+    "meal-planning"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@koa/cors": "^5.0.0",
+    "@koa/router": "^14.0.0",
+    "bcryptjs": "^3.0.2",
+    "dotenv": "^17.2.3",
+    "joi": "^18.0.2",
+    "jsonwebtoken": "^9.0.2",
+    "koa": "^3.1.1",
+    "koa-bodyparser": "^4.4.1",
+    "koa-conditional-get": "^3.0.0",
+    "koa-helmet": "^8.0.1",
+    "mysql2": "^3.15.3"
+  },
+  "devDependencies": {
+    "jest": "^30.2.0",
+    "supertest": "^7.1.4"
+  }
+}
